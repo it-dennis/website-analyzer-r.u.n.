@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+backend/.env
+
+# Node
+node_modules/
+frontend/dist/
+
+# Editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Docker
+.env
+
+# OS
+Thumbs.db
+
+# Verification artifacts
+frontend/verify*.png
+frontend/verify*.mjs
