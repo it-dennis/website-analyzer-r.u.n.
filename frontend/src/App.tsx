@@ -132,6 +132,15 @@ export default function App() {
               </div>
             </div>
 
+            {result.http_status !== undefined && result.http_status >= 400 && (
+              <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <AlertCircle size={18} className="text-amber-600 mt-0.5 shrink-0" />
+                <p className="text-sm text-amber-800">
+                  Die Seite hat mit <strong>HTTP {result.http_status}</strong> geantwortet. Die Ergebnisse beziehen sich auf diese Fehlerseite und sind nur eingeschränkt aussagekräftig.
+                </p>
+              </div>
+            )}
+
             <ExportBar data={result} />
 
             {/* Booking CTA */}

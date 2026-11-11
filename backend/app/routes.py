@@ -1,10 +1,12 @@
 import asyncio
 import time
+
+import httpx
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from .schemas import AnalysisRequest, AnalysisResult, SEOResult, PerformanceResult, SecurityResult, ContentResult
 from .rate_limit import rate_limit
-from .safe_url import assert_safe_url, UnsafeURLError
+from .safe_url import assert_safe_url, safe_client, UnsafeURLError
 from .analyzer import seo, performance, security, content
 
 router = APIRouter(prefix="/api")
@@ -20,6 +22,29 @@ def _overall_score(s: SEOResult, p: PerformanceResult, sec: SecurityResult, c: C
     )
 
 
+PREFLIGHT_HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; WebCheckAnalyzer/1.0)"}
+
+
+async def _preflight(url: str) -> int:
+    """Fetch the page once so unreachable sites fail with a clear message instead of four empty result cards."""
+    try:
+        async with safe_client(headers=PREFLIGHT_HEADERS, timeout=15.0, follow_redirects=True) as client:
+            resp = await client.get(url)
+        return resp.status_code
+    except UnsafeURLError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=502, detail="Die Seite antwortet nicht rechtzeitig (Timeout nach 15 Sekunden).")
+    except httpx.TooManyRedirects:
+        raise HTTPException(status_code=502, detail="Die Seite leitet in einer Endlosschleife weiter.")
+    except httpx.ConnectError as e:
+        if "CERTIFICATE_VERIFY_FAILED" in str(e) or "certificate" in str(e).lower():
+            raise HTTPException(status_code=502, detail="Das SSL-Zertifikat der Seite ist ungültig oder abgelaufen, die Analyse ist nicht möglich.")
+        raise HTTPException(status_code=502, detail="Die Seite ist nicht erreichbar (Verbindung abgelehnt oder Server offline).")
+    except httpx.HTTPError:
+        raise HTTPException(status_code=502, detail="Die Seite konnte nicht abgerufen werden.")
+
+
 @router.post("/analyze", response_model=AnalysisResult, dependencies=[Depends(rate_limit)])
 async def analyze_url(request: AnalysisRequest):
     url = request.url.strip()
@@ -30,6 +55,8 @@ async def analyze_url(request: AnalysisRequest):
         await asyncio.get_running_loop().run_in_executor(None, assert_safe_url, url)
     except UnsafeURLError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+    http_status = await _preflight(url)
 
     t0 = time.monotonic()
     results = await asyncio.gather(
@@ -49,6 +76,7 @@ async def analyze_url(request: AnalysisRequest):
 
     return AnalysisResult(
         url=url,
+        http_status=http_status,
         overall_score=_overall_score(seo_r, perf_r, sec_r, cont_r),
         seo=seo_r,
         performance=perf_r,

@@ -43,7 +43,7 @@ def assert_safe_host(hostname: str, port: int = 443) -> None:
     try:
         infos = socket.getaddrinfo(hostname, port, type=socket.SOCK_STREAM)
     except socket.gaierror:
-        raise UnsafeURLError("Der Hostname konnte nicht aufgelöst werden.")
+        raise UnsafeURLError("Die Domain konnte nicht gefunden werden. Bitte prüfe die Schreibweise der URL.")
     for info in infos:
         _check_ip(info[4][0])
 

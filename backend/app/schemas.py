@@ -73,3 +73,4 @@ class AnalysisResult(BaseModel):
     content: ContentResult
     analyzed_at: str
     response_time_ms: Optional[int] = None
+    http_status: Optional[int] = None

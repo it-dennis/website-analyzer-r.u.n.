@@ -67,4 +67,5 @@ export interface AnalysisResult {
   content: ContentResult;
   analyzed_at: string;
   response_time_ms?: number;
+  http_status?: number;
 }
