@@ -3,6 +3,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
+ARG VITE_BOOKING_URL
+ENV VITE_BOOKING_URL=$VITE_BOOKING_URL
 RUN npm run build
 
 FROM nginx:alpine

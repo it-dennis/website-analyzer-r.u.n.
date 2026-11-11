@@ -10,6 +10,10 @@ import PerformanceSection from './components/PerformanceSection';
 import ContentSection from './components/ContentSection';
 import ExportBar from './components/ExportBar';
 
+const BOOKING_URL = import.meta.env.VITE_BOOKING_URL || '#';
+
+const initialUrl = new URLSearchParams(window.location.search).get('url') ?? '';
+
 export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +57,7 @@ export default function App() {
               </p>
             </>
           )}
-          <UrlInput onSubmit={handleAnalyze} loading={loading} />
+          <UrlInput onSubmit={handleAnalyze} loading={loading} initialValue={initialUrl} />
         </div>
 
         {/* Loading State */}
@@ -129,6 +133,26 @@ export default function App() {
             </div>
 
             <ExportBar data={result} />
+
+            {/* Booking CTA */}
+            {BOOKING_URL !== '#' && (
+              <div className="flex items-center justify-between gap-4 bg-blue-50 border border-blue-200 rounded-xl p-5">
+                <div>
+                  <p className="font-semibold text-blue-900 text-sm">Tiefer einsteigen?</p>
+                  <p className="text-xs text-blue-700 mt-0.5">
+                    Professioneller Audit mit PDF-Report, manueller Sichtprüfung und konkretem Angebot — in 48&nbsp;h.
+                  </p>
+                </div>
+                <a
+                  href={`${BOOKING_URL}?url=${encodeURIComponent(result.url)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+                >
+                  Audit buchen →
+                </a>
+              </div>
+            )}
 
             {/* Section Cards */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

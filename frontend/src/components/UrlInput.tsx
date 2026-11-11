@@ -4,10 +4,11 @@ import { Search, Loader2 } from 'lucide-react';
 interface Props {
   onSubmit: (url: string) => void;
   loading: boolean;
+  initialValue?: string;
 }
 
-export default function UrlInput({ onSubmit, loading }: Props) {
-  const [url, setUrl] = useState('');
+export default function UrlInput({ onSubmit, loading, initialValue = '' }: Props) {
+  const [url, setUrl] = useState(initialValue);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
