@@ -38,6 +38,18 @@ npm run dev
 
 Dann `http://localhost:5173` öffnen. Die API-Doku liegt unter `http://localhost:8000/docs`.
 
+## Tests
+
+Die Backend-Tests laufen komplett offline: HTTP und DNS werden gemockt, es gibt keine echten Netzwerkzugriffe und keinen API-Key.
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+pytest
+```
+
+Abgedeckt sind der SSRF-Schutz (inkl. Weiterleitungen), das Rate-Limiting, die vier Analyzer, die Score-Berechnung und die API-Routen mit ihren Fehlerfällen (400/429/502).
+
 ## Konfiguration
 
 **Backend** (`backend/.env`, Vorlage: `backend/.env.example`)
@@ -109,6 +121,7 @@ backend/app/
   rate_limit.py      Rate-Limiting
   schemas.py         Pydantic-Modelle
   analyzer/          seo.py, performance.py, security.py, content.py
+backend/tests/       pytest-Tests (offline)
 frontend/src/
   App.tsx, api.ts, types.ts
   components/        Eingabe, Ergebnis-Karten, Export, pdf/ReportPDF.tsx
