@@ -2,6 +2,7 @@ import httpx
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 from typing import Optional
+from ..safe_url import safe_client
 from ..schemas import SEOResult, Check
 
 HEADERS = {
@@ -25,7 +26,7 @@ def _score(checks: list[Check]) -> int:
 
 async def analyze(url: str) -> SEOResult:
     try:
-        async with httpx.AsyncClient(headers=HEADERS, timeout=TIMEOUT, follow_redirects=True) as client:
+        async with safe_client(headers=HEADERS, timeout=TIMEOUT, follow_redirects=True) as client:
             resp = await client.get(url)
             html = resp.text
 
@@ -70,7 +71,7 @@ async def analyze(url: str) -> SEOResult:
         # --- robots.txt ---
         robots_url = urljoin(base, "/robots.txt")
         try:
-            async with httpx.AsyncClient(timeout=8.0) as client:
+            async with safe_client(timeout=8.0) as client:
                 robots_resp = await client.get(robots_url)
             if robots_resp.status_code == 200:
                 checks.append(Check(name="robots.txt", status="pass", value="Vorhanden"))
@@ -82,7 +83,7 @@ async def analyze(url: str) -> SEOResult:
         # --- Sitemap ---
         sitemap_url = urljoin(base, "/sitemap.xml")
         try:
-            async with httpx.AsyncClient(timeout=8.0) as client:
+            async with safe_client(timeout=8.0) as client:
                 sitemap_resp = await client.get(sitemap_url)
             if sitemap_resp.status_code == 200:
                 checks.append(Check(name="sitemap.xml", status="pass", value="Vorhanden"))

@@ -3,6 +3,7 @@ import time
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 from .schemas import AnalysisRequest, AnalysisResult, SEOResult, PerformanceResult, SecurityResult, ContentResult
+from .safe_url import assert_safe_url, UnsafeURLError
 from .analyzer import seo, performance, security, content
 
 router = APIRouter(prefix="/api")
@@ -23,6 +24,11 @@ async def analyze_url(request: AnalysisRequest):
     url = request.url.strip()
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
+
+    try:
+        await asyncio.get_running_loop().run_in_executor(None, assert_safe_url, url)
+    except UnsafeURLError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     t0 = time.monotonic()
     results = await asyncio.gather(

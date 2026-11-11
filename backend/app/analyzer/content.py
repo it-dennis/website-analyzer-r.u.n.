@@ -2,6 +2,7 @@ import httpx
 import re
 from bs4 import BeautifulSoup, Comment
 from urllib.parse import urlparse, urljoin
+from ..safe_url import safe_client
 from ..schemas import ContentResult, Check
 
 HEADERS = {
@@ -30,7 +31,7 @@ def _extract_text(soup: BeautifulSoup) -> str:
 
 async def analyze(url: str) -> ContentResult:
     try:
-        async with httpx.AsyncClient(headers=HEADERS, timeout=TIMEOUT, follow_redirects=True) as client:
+        async with safe_client(headers=HEADERS, timeout=TIMEOUT, follow_redirects=True) as client:
             resp = await client.get(url)
 
         soup = BeautifulSoup(resp.text, "lxml")

@@ -4,6 +4,7 @@ import socket
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 from typing import Optional
+from ..safe_url import safe_client, assert_safe_host
 from ..schemas import SecurityResult, Check
 
 TIMEOUT = 15.0
@@ -19,6 +20,7 @@ def _score(checks: list[Check]) -> int:
 
 def _get_ssl_info(hostname: str) -> dict:
     try:
+        assert_safe_host(hostname, 443)
         ctx = ssl.create_default_context()
         with socket.create_connection((hostname, 443), timeout=10) as raw_sock:
             with ctx.wrap_socket(raw_sock, server_hostname=hostname) as ssock:
@@ -54,7 +56,7 @@ async def analyze(url: str) -> SecurityResult:
         if is_https:
             http_url = url.replace("https://", "http://", 1)
             try:
-                async with httpx.AsyncClient(follow_redirects=False, timeout=8.0) as client:
+                async with safe_client(follow_redirects=False, timeout=8.0) as client:
                     redir_resp = await client.get(http_url)
                 location = redir_resp.headers.get("location", "")
                 if redir_resp.status_code in (301, 302, 307, 308) and "https" in location.lower():
@@ -86,7 +88,7 @@ async def analyze(url: str) -> SecurityResult:
                 checks.append(Check(name="SSL-Zertifikat", status="fail", value=ssl_info.get("error", "Ungültig"), recommendation="Installiere ein gültiges SSL-Zertifikat."))
 
         # --- Security Headers ---
-        async with httpx.AsyncClient(timeout=TIMEOUT, follow_redirects=True) as client:
+        async with safe_client(timeout=TIMEOUT, follow_redirects=True) as client:
             resp = await client.get(url)
         headers = {k.lower(): v for k, v in resp.headers.items()}
 
