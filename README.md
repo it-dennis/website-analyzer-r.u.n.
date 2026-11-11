@@ -4,7 +4,7 @@ Website-Checker: URL eingeben, in Sekunden ein Bericht zu SEO, Performance, Sich
 
 - **Backend:** FastAPI (Python 3.11), `httpx`, `BeautifulSoup`
 - **Frontend:** React 18, Vite, Tailwind, `@react-pdf/renderer`
-- **Deployment:** Docker Compose (nginx liefert das Frontend aus und leitet `/api/` an das Backend weiter)
+- **Deployment:** Docker Compose (Caddy für HTTPS, nginx liefert das Frontend aus und leitet `/api/` an das Backend weiter)
 
 ## Was geprüft wird
 
@@ -55,23 +55,27 @@ Dann `http://localhost:5173` öffnen. Die API-Doku liegt unter `http://localhost
 |---|---|
 | `VITE_BOOKING_URL` | URL der Buchungsseite. Ist sie gesetzt, erscheint nach jedem Scan ein „Audit buchen“-Banner. Die gescannte URL wird als `?url=` übergeben. Ohne Wert bleibt der Banner ausgeblendet. |
 
-Mit Docker Compose liest Compose `VITE_BOOKING_URL` aus der Shell oder aus einer `.env` im Projektroot (nicht aus `frontend/.env.example`) und reicht sie als Build-Argument weiter.
+Mit Docker Compose liest Compose `VITE_BOOKING_URL` aus der Shell oder aus der `.env` im Projektroot (Vorlage: `.env.example`; nicht `frontend/.env.example`) und reicht sie als Build-Argument weiter.
 
 Die Startseite akzeptiert `?url=example.com` und füllt damit das Eingabefeld vor.
 
-## Deployment
+## Deployment (mit HTTPS)
+
+Voraussetzungen: ein Server mit Docker, eine Domain, deren DNS-Eintrag auf den Server zeigt, und offene Ports 80 und 443.
 
 ```bash
 cp backend/.env.example backend/.env    # und ausfüllen
-echo "VITE_BOOKING_URL=https://deine-domain.de/webseiten-check.html" > .env   # optional
+cp .env.example .env                     # DOMAIN (Pflicht) und VITE_BOOKING_URL (optional) setzen
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 `deploy.sh` macht auf dem Server `git pull`, baut neu und räumt alte Images auf.
 
-- `docker-compose.yml` veröffentlicht zusätzlich Port 8000 des Backends (für die Entwicklung). `docker-compose.prod.yml` tut das nicht; nur nginx auf Port 80 ist erreichbar.
-- nginx spricht nur HTTP. Für HTTPS einen Reverse Proxy oder Load Balancer davorschalten (z. B. Caddy, Traefik, Cloudflare).
-- Das Rate-Limit nutzt den Header `X-Real-IP`, den nginx aus der Client-Adresse setzt. Steht vor nginx ein weiterer Proxy, muss dieser die echte Client-IP weitergeben, sonst teilen sich alle Nutzer ein Limit.
+Aufbau: **Caddy** (Ports 80/443) → **nginx** (Frontend, intern) → **Backend** (intern). Caddy holt und erneuert das Let's-Encrypt-Zertifikat automatisch, leitet HTTP auf HTTPS um und setzt den HSTS-Header. Die Zertifikate liegen im Docker-Volume `caddy_data`; das Volume nicht löschen, sonst gelten die Let's-Encrypt-Limits für Neuausstellungen. Konfiguration: `Caddyfile`.
+
+- Ohne `DOMAIN` bricht `docker compose` mit einer Fehlermeldung ab.
+- `docker-compose.yml` ist für die Entwicklung gedacht (HTTP auf Port 80, Backend zusätzlich auf Port 8000, kein HTTPS).
+- Das Rate-Limit nutzt die Client-IP. Caddy übergibt sie als `X-Forwarded-For`, nginx übernimmt sie aus dem Docker-Netz (`frontend/nginx.conf`). Steht vor Caddy noch ein weiterer Proxy (z. B. Cloudflare), muss dieser Caddy als vertrauenswürdig eingerichtet werden (`trusted_proxies`), sonst teilen sich alle Nutzer ein Limit.
 - Die Rate-Limit-Zähler liegen im Arbeitsspeicher. Das ist für einen einzelnen uvicorn-Prozess (wie im Dockerfile) gedacht; bei mehreren Workern oder Replikas wäre ein gemeinsamer Speicher wie Redis nötig.
 
 ## Sicherheit

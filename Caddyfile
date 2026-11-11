@@ -1,0 +1,7 @@
+# Automatisches HTTPS (Let's Encrypt) und HTTP→HTTPS-Weiterleitung.
+# DOMAIN kommt aus der .env im Projektroot.
+{$DOMAIN} {
+	encode gzip zstd
+	header Strict-Transport-Security "max-age=31536000"
+	reverse_proxy frontend:80
+}
