@@ -1,8 +1,9 @@
 import asyncio
 import time
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from .schemas import AnalysisRequest, AnalysisResult, SEOResult, PerformanceResult, SecurityResult, ContentResult
+from .rate_limit import rate_limit
 from .safe_url import assert_safe_url, UnsafeURLError
 from .analyzer import seo, performance, security, content
 
@@ -19,7 +20,7 @@ def _overall_score(s: SEOResult, p: PerformanceResult, sec: SecurityResult, c: C
     )
 
 
-@router.post("/analyze", response_model=AnalysisResult)
+@router.post("/analyze", response_model=AnalysisResult, dependencies=[Depends(rate_limit)])
 async def analyze_url(request: AnalysisRequest):
     url = request.url.strip()
     if not url.startswith(("http://", "https://")):
