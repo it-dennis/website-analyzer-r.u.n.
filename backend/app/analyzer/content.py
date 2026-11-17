@@ -71,7 +71,7 @@ async def analyze(url: str) -> ContentResult:
         if h2:
             checks.append(Check(name="Überschriftenstruktur", status="pass", value=f"H1: {len(h1)} · H2: {len(h2)} · H3: {len(h3)}"))
         else:
-            checks.append(Check(name="Überschriftenstruktur", status="warning", value=f"H1: {len(h1)} · keine H2", recommendation="Strukturiere Inhalte mit H2 und H3 Überschriften."))
+            checks.append(Check(name="Überschriftenstruktur", status="warning", value=f"H1: {len(h1)} · keine H2", recommendation="Strukturieren Sie Inhalte mit H2 und H3 Überschriften."))
 
         # Images & Alt
         if all_imgs:

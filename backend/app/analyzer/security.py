@@ -48,7 +48,7 @@ def _evaluate_headers(headers: dict[str, str]) -> list[Check]:
     name = "HSTS (Strict-Transport-Security)"
     val = headers.get("strict-transport-security")
     if not val:
-        checks.append(Check(name=name, status="warning", value="Fehlt", recommendation="Schützt vor Downgrade-Angriffen. Füge den HSTS-Header hinzu."))
+        checks.append(Check(name=name, status="warning", value="Fehlt", recommendation="Schützt vor Downgrade-Angriffen. Fügen Sie den HSTS-Header hinzu."))
     else:
         m = re.search(r"max-age\s*=\s*\"?(\d+)", val, re.I)
         age = int(m.group(1)) if m else 0
@@ -65,9 +65,9 @@ def _evaluate_headers(headers: dict[str, str]) -> list[Check]:
     elif "frame-ancestors" in csp_dirs:
         checks.append(Check(name=name, status="pass", value="Über CSP frame-ancestors geregelt"))
     elif val:
-        checks.append(Check(name=name, status="warning", value=_short(val), recommendation="Ungültiger oder veralteter Wert. Setze X-Frame-Options: DENY oder SAMEORIGIN."))
+        checks.append(Check(name=name, status="warning", value=_short(val), recommendation="Ungültiger oder veralteter Wert. Setzen Sie X-Frame-Options: DENY oder SAMEORIGIN."))
     else:
-        checks.append(Check(name=name, status="warning", value="Fehlt", recommendation="Verhindert Clickjacking-Angriffe. Setze X-Frame-Options: DENY oder SAMEORIGIN."))
+        checks.append(Check(name=name, status="warning", value="Fehlt", recommendation="Verhindert Clickjacking-Angriffe. Setzen Sie X-Frame-Options: DENY oder SAMEORIGIN."))
 
     # X-Content-Type-Options
     name = "X-Content-Type-Options"
@@ -75,9 +75,9 @@ def _evaluate_headers(headers: dict[str, str]) -> list[Check]:
     if val and val.strip().lower() == "nosniff":
         checks.append(Check(name=name, status="pass", value=_short(val)))
     elif val:
-        checks.append(Check(name=name, status="warning", value=_short(val), recommendation="Ungültiger Wert. Setze X-Content-Type-Options: nosniff."))
+        checks.append(Check(name=name, status="warning", value=_short(val), recommendation="Ungültiger Wert. Setzen Sie X-Content-Type-Options: nosniff."))
     else:
-        checks.append(Check(name=name, status="warning", value="Fehlt", recommendation="Verhindert MIME-Sniffing. Setze X-Content-Type-Options: nosniff."))
+        checks.append(Check(name=name, status="warning", value="Fehlt", recommendation="Verhindert MIME-Sniffing. Setzen Sie X-Content-Type-Options: nosniff."))
 
     # Referrer-Policy
     name = "Referrer-Policy"
@@ -97,7 +97,7 @@ def _evaluate_headers(headers: dict[str, str]) -> list[Check]:
     # Content-Security-Policy
     name = "Content-Security-Policy (CSP)"
     if not csp:
-        checks.append(Check(name=name, status="warning", value="Fehlt", recommendation="Schützt vor XSS-Angriffen. Definiere eine CSP-Richtlinie."))
+        checks.append(Check(name=name, status="warning", value="Fehlt", recommendation="Schützt vor XSS-Angriffen. Definieren Sie eine CSP-Richtlinie."))
     else:
         script_src = csp_dirs.get("script-src", csp_dirs.get("default-src", []))
         protected = any(t.startswith(("'nonce-", "'sha")) or t == "'strict-dynamic'" for t in script_src)
@@ -142,7 +142,7 @@ async def analyze(url: str) -> SecurityResult:
         if is_https:
             checks.append(Check(name="HTTPS", status="pass", value="Aktiv"))
         else:
-            checks.append(Check(name="HTTPS", status="fail", value="Nicht aktiv", recommendation="Aktiviere HTTPS mit einem SSL-Zertifikat (z.B. kostenlos über Let's Encrypt)."))
+            checks.append(Check(name="HTTPS", status="fail", value="Nicht aktiv", recommendation="Aktivieren Sie HTTPS mit einem SSL-Zertifikat (z.B. kostenlos über Let's Encrypt)."))
 
         # --- HTTP → HTTPS Redirect ---
         if is_https:
@@ -154,7 +154,7 @@ async def analyze(url: str) -> SecurityResult:
                 if redir_resp.status_code in (301, 302, 307, 308) and "https" in location.lower():
                     checks.append(Check(name="HTTP→HTTPS Weiterleitung", status="pass", value=f"HTTP {redir_resp.status_code}"))
                 else:
-                    checks.append(Check(name="HTTP→HTTPS Weiterleitung", status="warning", value="Keine automatische Weiterleitung", recommendation="Leite alle HTTP-Anfragen auf HTTPS weiter."))
+                    checks.append(Check(name="HTTP→HTTPS Weiterleitung", status="warning", value="Keine automatische Weiterleitung", recommendation="Leiten Sie alle HTTP-Anfragen auf HTTPS weiter."))
             except Exception:
                 checks.append(Check(name="HTTP→HTTPS Weiterleitung", status="info", value="Konnte nicht geprüft werden"))
 
@@ -171,13 +171,13 @@ async def analyze(url: str) -> SecurityResult:
 
             if ssl_valid is True:
                 if ssl_days is not None and ssl_days < 14:
-                    checks.append(Check(name="SSL-Zertifikat", status="fail", value=f"Läuft in {ssl_days} Tagen ab!", recommendation="Erneuere das SSL-Zertifikat sofort."))
+                    checks.append(Check(name="SSL-Zertifikat", status="fail", value=f"Läuft in {ssl_days} Tagen ab!", recommendation="Erneuern Sie das SSL-Zertifikat sofort."))
                 elif ssl_days is not None and ssl_days < 30:
-                    checks.append(Check(name="SSL-Zertifikat", status="warning", value=f"Läuft in {ssl_days} Tagen ab", recommendation="Plane die Zertifikatserneuerung."))
+                    checks.append(Check(name="SSL-Zertifikat", status="warning", value=f"Läuft in {ssl_days} Tagen ab", recommendation="Planen Sie die Zertifikatserneuerung."))
                 else:
                     checks.append(Check(name="SSL-Zertifikat", status="pass", value=f"Gültig · {ssl_days} Tage verbleibend · {ssl_issuer}"))
             elif ssl_valid is False:
-                checks.append(Check(name="SSL-Zertifikat", status="fail", value=ssl_info.get("error", "Ungültig"), recommendation="Installiere ein gültiges SSL-Zertifikat."))
+                checks.append(Check(name="SSL-Zertifikat", status="fail", value=ssl_info.get("error", "Ungültig"), recommendation="Installieren Sie ein gültiges SSL-Zertifikat."))
 
         # --- Security Headers ---
         async with safe_client(timeout=TIMEOUT, follow_redirects=True) as client:

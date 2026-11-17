@@ -46,7 +46,7 @@ ${data.performance.scores ? `
 | Kategorie | Score |
 |-----------|-------|
 | Performance | ${data.performance.scores.performance ?? '–'} |
-| Accessibility | ${data.performance.scores.accessibility ?? '–'} |
+| Barrierefreiheit | ${data.performance.scores.accessibility ?? '–'} |
 | Best Practices | ${data.performance.scores.best_practices ?? '–'} |
 | SEO | ${data.performance.scores.seo ?? '–'} |
 ` : ''}

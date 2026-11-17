@@ -63,12 +63,12 @@ async def _check_robots(base: str) -> tuple[Check, list[str]]:
     except Exception:
         return Check(name="robots.txt", status="warning", value="Nicht erreichbar", recommendation="robots.txt konnte nicht geladen werden."), []
     if resp.status_code != 200:
-        return Check(name="robots.txt", status="warning", value=f"HTTP {resp.status_code}", recommendation="Erstelle eine robots.txt-Datei."), []
+        return Check(name="robots.txt", status="warning", value=f"HTTP {resp.status_code}", recommendation="Erstellen Sie eine robots.txt-Datei."), []
     if _looks_like_html(resp):
-        return Check(name="robots.txt", status="warning", value="Keine gültige robots.txt", recommendation="Unter /robots.txt wird eine HTML-Seite ausgeliefert. Lege eine echte robots.txt als Textdatei an."), []
+        return Check(name="robots.txt", status="warning", value="Keine gültige robots.txt", recommendation="Unter /robots.txt wird eine HTML-Seite ausgeliefert. Legen Sie eine echte robots.txt als Textdatei an."), []
     blocks_all, sitemaps = _parse_robots(resp.text)
     if blocks_all:
-        return Check(name="robots.txt", status="fail", value="Sperrt die gesamte Website (Disallow: /)", recommendation="Die robots.txt verbietet allen Suchmaschinen den Zugriff. Entferne \"Disallow: /\", wenn die Seite gefunden werden soll."), sitemaps
+        return Check(name="robots.txt", status="fail", value="Sperrt die gesamte Website (Disallow: /)", recommendation="Die robots.txt verbietet allen Suchmaschinen den Zugriff. Entfernen Sie \"Disallow: /\", wenn die Seite gefunden werden soll."), sitemaps
     value = "Vorhanden · verweist auf Sitemap" if sitemaps else "Vorhanden"
     return Check(name="robots.txt", status="pass", value=value), sitemaps
 
@@ -95,8 +95,8 @@ async def _check_sitemap(base: str, robots_sitemaps: list[str]) -> Check:
     if not reachable:
         return Check(name="sitemap.xml", status="warning", value="Nicht erreichbar", recommendation="sitemap.xml konnte nicht geladen werden.")
     if default_status == 200:
-        return Check(name="sitemap.xml", status="warning", value="Keine gültige Sitemap", recommendation="Unter /sitemap.xml liegt keine XML-Sitemap. Erstelle eine gültige Sitemap und reiche sie bei Google Search Console ein.")
-    return Check(name="sitemap.xml", status="warning", value=f"HTTP {default_status}" if default_status else "Nicht gefunden", recommendation="Erstelle eine XML-Sitemap und reiche sie bei Google Search Console ein.")
+        return Check(name="sitemap.xml", status="warning", value="Keine gültige Sitemap", recommendation="Unter /sitemap.xml liegt keine XML-Sitemap. Erstellen Sie eine gültige Sitemap und reichen Sie sie in der Google Search Console ein.")
+    return Check(name="sitemap.xml", status="warning", value=f"HTTP {default_status}" if default_status else "Nicht gefunden", recommendation="Erstellen Sie eine XML-Sitemap und reichen Sie sie in der Google Search Console ein.")
 
 
 async def analyze(url: str) -> SEOResult:
@@ -115,7 +115,7 @@ async def analyze(url: str) -> SEOResult:
         title_tag = soup.find("title")
         title_text = title_tag.get_text(strip=True) if title_tag else None
         if not title_text:
-            checks.append(Check(name="Title-Tag", status="fail", value="Fehlt", recommendation="Füge einen einzigartigen <title>-Tag (30–60 Zeichen) hinzu."))
+            checks.append(Check(name="Title-Tag", status="fail", value="Fehlt", recommendation="Fügen Sie einen einzigartigen <title>-Tag (30–60 Zeichen) hinzu."))
         elif len(title_text) < 30:
             checks.append(Check(name="Title-Tag", status="warning", value=f"{len(title_text)} Zeichen", recommendation="Der Titel ist zu kurz (optimal: 30–60 Zeichen)."))
         elif len(title_text) > 60:
@@ -127,7 +127,7 @@ async def analyze(url: str) -> SEOResult:
         desc_tag = soup.find("meta", attrs={"name": "description"})
         desc_text = desc_tag.get("content", "").strip() if desc_tag else None
         if not desc_text:
-            checks.append(Check(name="Meta-Description", status="fail", value="Fehlt", recommendation="Füge eine Meta-Description (120–160 Zeichen) hinzu."))
+            checks.append(Check(name="Meta-Description", status="fail", value="Fehlt", recommendation="Fügen Sie eine Meta-Description (120–160 Zeichen) hinzu."))
         elif len(desc_text) < 120:
             checks.append(Check(name="Meta-Description", status="warning", value=f"{len(desc_text)} Zeichen", recommendation="Meta-Description zu kurz (optimal: 120–160 Zeichen)."))
         elif len(desc_text) > 160:
@@ -140,7 +140,7 @@ async def analyze(url: str) -> SEOResult:
         if len(h1_tags) == 0:
             checks.append(Check(name="H1-Überschrift", status="fail", value="Keine H1 gefunden", recommendation="Jede Seite sollte genau eine H1-Überschrift haben."))
         elif len(h1_tags) > 1:
-            checks.append(Check(name="H1-Überschrift", status="warning", value=f"{len(h1_tags)} H1-Tags", recommendation="Zu viele H1-Tags. Nutze nur eine H1 pro Seite."))
+            checks.append(Check(name="H1-Überschrift", status="warning", value=f"{len(h1_tags)} H1-Tags", recommendation="Zu viele H1-Tags. Nutzen Sie nur eine H1 pro Seite."))
         else:
             checks.append(Check(name="H1-Überschrift", status="pass", value=h1_tags[0].get_text(strip=True)[:60]))
 
@@ -154,7 +154,7 @@ async def analyze(url: str) -> SEOResult:
         if canonical:
             checks.append(Check(name="Canonical-URL", status="pass", value=canonical.get("href", "")[:80]))
         else:
-            checks.append(Check(name="Canonical-URL", status="warning", value="Fehlt", recommendation="Füge einen <link rel=\"canonical\"> ein, um Duplicate Content zu vermeiden."))
+            checks.append(Check(name="Canonical-URL", status="warning", value="Fehlt", recommendation="Fügen Sie einen <link rel=\"canonical\"> ein, um Duplicate Content zu vermeiden."))
 
         # --- Open Graph ---
         og_title = soup.find("meta", property="og:title")
@@ -164,9 +164,9 @@ async def analyze(url: str) -> SEOResult:
         if og_count == 3:
             checks.append(Check(name="Open Graph Tags", status="pass", value="og:title, og:description, og:image vorhanden"))
         elif og_count > 0:
-            checks.append(Check(name="Open Graph Tags", status="warning", value=f"{og_count}/3 Tags", recommendation="Ergänze fehlende Open Graph Tags für bessere Social-Media-Darstellung."))
+            checks.append(Check(name="Open Graph Tags", status="warning", value=f"{og_count}/3 Tags", recommendation="Ergänzen Sie fehlende Open Graph Tags für bessere Social-Media-Darstellung."))
         else:
-            checks.append(Check(name="Open Graph Tags", status="warning", value="Keine OG-Tags", recommendation="Füge Open Graph Meta-Tags hinzu (og:title, og:description, og:image)."))
+            checks.append(Check(name="Open Graph Tags", status="warning", value="Keine OG-Tags", recommendation="Fügen Sie Open Graph Meta-Tags hinzu (og:title, og:description, og:image)."))
 
         # --- Language ---
         html_tag = soup.find("html")
@@ -174,14 +174,14 @@ async def analyze(url: str) -> SEOResult:
         if lang:
             checks.append(Check(name="Sprache (lang-Attribut)", status="pass", value=lang))
         else:
-            checks.append(Check(name="Sprache (lang-Attribut)", status="warning", value="Fehlt", recommendation="Setze das lang-Attribut im <html>-Tag (z.B. lang=\"de\")."))
+            checks.append(Check(name="Sprache (lang-Attribut)", status="warning", value="Fehlt", recommendation="Setzen Sie das lang-Attribut im <html>-Tag (z.B. lang=\"de\")."))
 
         # --- Viewport Meta ---
         viewport = soup.find("meta", attrs={"name": "viewport"})
         if viewport:
             checks.append(Check(name="Viewport Meta-Tag", status="pass", value="Vorhanden (Mobile-freundlich)"))
         else:
-            checks.append(Check(name="Viewport Meta-Tag", status="fail", value="Fehlt", recommendation="Füge <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> hinzu."))
+            checks.append(Check(name="Viewport Meta-Tag", status="fail", value="Fehlt", recommendation="Fügen Sie <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> hinzu."))
 
         # --- Image Alt Texts ---
         all_imgs = soup.find_all("img")
@@ -191,7 +191,7 @@ async def analyze(url: str) -> SEOResult:
         elif len(missing_alt) == 0:
             checks.append(Check(name="Bilder mit Alt-Text", status="pass", value=f"Alle {len(all_imgs)} Bilder haben Alt-Text"))
         elif len(missing_alt) / len(all_imgs) > 0.5:
-            checks.append(Check(name="Bilder mit Alt-Text", status="fail", value=f"{len(missing_alt)}/{len(all_imgs)} ohne Alt-Text", recommendation="Füge beschreibende Alt-Texte zu allen Bildern hinzu."))
+            checks.append(Check(name="Bilder mit Alt-Text", status="fail", value=f"{len(missing_alt)}/{len(all_imgs)} ohne Alt-Text", recommendation="Fügen Sie allen Bildern beschreibende Alt-Texte hinzu."))
         else:
             checks.append(Check(name="Bilder mit Alt-Text", status="warning", value=f"{len(missing_alt)}/{len(all_imgs)} ohne Alt-Text", recommendation="Einige Bilder haben keinen Alt-Text."))
 
@@ -200,7 +200,7 @@ async def analyze(url: str) -> SEOResult:
         if ld_json:
             checks.append(Check(name="Strukturierte Daten (JSON-LD)", status="pass", value="Vorhanden"))
         else:
-            checks.append(Check(name="Strukturierte Daten (JSON-LD)", status="info", value="Nicht gefunden", recommendation="Füge JSON-LD strukturierte Daten hinzu, um Rich Snippets in Google zu ermöglichen."))
+            checks.append(Check(name="Strukturierte Daten (JSON-LD)", status="info", value="Nicht gefunden", recommendation="Fügen Sie JSON-LD strukturierte Daten hinzu, um Rich Snippets in Google zu ermöglichen."))
 
         js_hint = js_rendered_hint(html)
         if js_hint:
