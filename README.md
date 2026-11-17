@@ -1,6 +1,12 @@
+<p align="center">
+  <a href="https://dennisrapp.com"><img src="docs/agency-logo.png" alt="Dennis Rapp IT-Agency" width="96" height="96"></a>
+</p>
+
 # R.U.N. – Rapid URL Navigator
 
 Website-Checker: URL eingeben, in Sekunden ein Bericht zu SEO, Performance, Sicherheit und Content. Export als PDF oder Markdown.
+
+Ein Projekt der [Dennis Rapp IT-Agency](https://dennisrapp.com). Lizenz: [GNU GPL v3](LICENSE).
 
 - **Backend:** FastAPI (Python 3.11), `httpx`, `BeautifulSoup`
 - **Frontend:** React 18, Vite, Tailwind, `@react-pdf/renderer`
@@ -132,3 +138,30 @@ frontend/src/
 ```
 
 `Website-Checker_von_geplanter_Webseite/` enthält die zugehörige Marketing-Seite (statisches HTML) und ist nicht Teil der App.
+
+## Lizenz
+
+R.U.N. ist freie Software und steht unter der **GNU General Public License, Version 3** (GPL-3.0). Den vollständigen Text finden Sie in der Datei [`LICENSE`](LICENSE).
+
+Sie dürfen das Programm nutzen, untersuchen, verändern und weitergeben. Wer eine veränderte Version weitergibt, muss sie ebenfalls unter der GPL v3 veröffentlichen und den Quellcode bereitstellen. Das Programm kommt ohne jede Gewährleistung.
+
+Name „R.U.N. – Rapid URL Navigator“, Logos und Markenauftritt sowie das Logo der Dennis Rapp IT-Agency sind von der Lizenz nicht umfasst. Für abgeleitete Versionen bitte ein eigenes Erscheinungsbild verwenden.
+
+## Zusammenarbeit
+
+Beiträge sind willkommen, ob Fehlerbericht, Verbesserungsvorschlag oder Code.
+
+- **Fehler und Ideen:** bitte als [Issue](../../issues) anlegen, möglichst mit der geprüften URL (sofern öffentlich), erwartetem und tatsächlichem Verhalten.
+- **Code-Beiträge:** Repository forken, einen Branch pro Änderung anlegen und einen Pull Request gegen `main` öffnen. Bei größeren Änderungen vorher bitte ein Issue zur Abstimmung eröffnen.
+- **Tests:** Neue oder geänderte Prüfungen brauchen einen passenden Test (`cd backend && pytest`). Die Tests laufen offline.
+- **Lizenz der Beiträge:** Mit einem Pull Request stimmen Sie zu, dass Ihr Beitrag unter der GPL v3 veröffentlicht wird.
+- **Sicherheitslücken** (z. B. SSRF-Umgehung) bitte nicht öffentlich melden, sondern per E-Mail an [info@dennisrapp.com](mailto:info@dennisrapp.com).
+
+Für Fragen, individuelle Anpassungen oder Unterstützung bei Betrieb und Weiterentwicklung erreichen Sie die [Dennis Rapp IT-Agency](https://dennisrapp.com) unter [info@dennisrapp.com](mailto:info@dennisrapp.com).
+
+---
+
+<p align="center">
+  <a href="https://dennisrapp.com"><img src="docs/agency-logo.png" alt="Dennis Rapp IT-Agency" width="48" height="48"></a><br>
+  © Dennis Rapp IT-Agency · <a href="LICENSE">GPL v3</a>
+</p>
