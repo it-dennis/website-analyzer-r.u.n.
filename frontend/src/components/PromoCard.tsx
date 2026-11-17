@@ -14,10 +14,10 @@ interface Promo {
 const DEFAULT_PROMO: Promo = {
   brand: 'Dennis Rapp IT-Agency',
   kicker: 'Ihre Website, professionell verbessert',
-  headline: 'Ich helfe Ihnen, die Schwachstellen Ihrer Website zu beheben.',
-  text: 'Sie haben gesehen, wo Ihre Seite Tempo verliert. Ich setze die Empfehlungen für Sie um.',
-  points: ['Unverbindliches Erstgespräch'],
-  cta: { label: 'Unverbindlich anfragen', href: 'mailto:info@dennisrapp.com' },
+  headline: 'Ihre Webseite hat Aua?',
+  text: 'Jetzt unverbindlich anfragen!',
+  points: [],
+  cta: { label: 'Jetzt anfragen', href: 'https://dennisrapp.com' },
 };
 
 function usePromo(): Promo {
@@ -40,6 +40,8 @@ function usePromo(): Promo {
 export default function PromoCard({ scannedUrl }: { scannedUrl?: string }) {
   const promo = usePromo();
   const href = promo.cta.href.replace('{url}', encodeURIComponent(scannedUrl ?? ''));
+  // Externe Seiten in neuem Tab, damit das Ergebnis der Analyse nicht verloren geht.
+  const external = /^https?:\/\//i.test(href);
 
   return (
     <aside className="card relative overflow-hidden" aria-label="Angebot der Dennis Rapp IT-Agency">
@@ -65,7 +67,7 @@ export default function PromoCard({ scannedUrl }: { scannedUrl?: string }) {
             </ul>
           )}
         </div>
-        <a href={href} className="btn btn-primary whitespace-nowrap">
+        <a href={href} className="btn btn-primary whitespace-nowrap" {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
           {promo.cta.label} <ArrowRight size={16} />
         </a>
       </div>

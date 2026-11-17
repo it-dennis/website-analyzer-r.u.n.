@@ -1,15 +1,11 @@
 {
   "brand": "Dennis Rapp IT-Agency",
   "kicker": "Ihre Website, professionell verbessert",
-  "headline": "Ich helfe Ihnen, die Schwachstellen Ihrer Website zu beheben.",
-  "text": "Sie haben gesehen, wo Ihre Seite Tempo verliert. Ich setze die Empfehlungen für Sie um: schnell, verständlich und zum fairen Festpreis.",
-  "points": [
-    "Unverbindliches Erstgespräch",
-    "Konkrete Umsetzung statt langer Berichte",
-    "Antwort in der Regel innerhalb eines Werktags"
-  ],
+  "headline": "Ihre Webseite hat Aua?",
+  "text": "Jetzt unverbindlich anfragen!",
+  "points": [],
   "cta": {
-    "label": "Unverbindlich anfragen",
-    "href": "mailto:info@dennisrapp.com?subject=Anfrage%20zur%20Website-Analyse&body=Hallo%20Herr%20Rapp%2C%0A%0Abitte%20unterst%C3%BCtzen%20Sie%20mich%20bei%20der%20Website%3A%20{url}%0A"
+    "label": "Jetzt anfragen",
+    "href": "https://dennisrapp.com"
   }
 }
