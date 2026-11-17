@@ -1,3 +1,4 @@
+import re
 import httpx
 import ssl
 import socket
@@ -16,6 +17,97 @@ def _score(checks: list[Check]) -> int:
         return 100
     points = sum(2 if c.status == "pass" else 1 if c.status == "warning" else 0 for c in scorable)
     return round(points / (len(scorable) * 2) * 100)
+
+HSTS_MIN_SECONDS = 15552000  # 180 days
+REFERRER_POLICIES = {
+    "no-referrer", "no-referrer-when-downgrade", "origin", "origin-when-cross-origin",
+    "same-origin", "strict-origin", "strict-origin-when-cross-origin", "unsafe-url",
+}
+
+
+def _short(val: str) -> str:
+    return val[:80]
+
+
+def _csp_directives(csp: str) -> dict[str, list[str]]:
+    out: dict[str, list[str]] = {}
+    for part in csp.split(";"):
+        tokens = part.split()
+        if tokens:
+            out.setdefault(tokens[0].lower(), [t.lower() for t in tokens[1:]])
+    return out
+
+
+def _evaluate_headers(headers: dict[str, str]) -> list[Check]:
+    """Presence and basic sanity of the five security headers. `headers` keys are lowercase."""
+    checks: list[Check] = []
+    csp = headers.get("content-security-policy", "")
+    csp_dirs = _csp_directives(csp) if csp else {}
+
+    # HSTS
+    name = "HSTS (Strict-Transport-Security)"
+    val = headers.get("strict-transport-security")
+    if not val:
+        checks.append(Check(name=name, status="warning", value="Fehlt", recommendation="Schützt vor Downgrade-Angriffen. Füge den HSTS-Header hinzu."))
+    else:
+        m = re.search(r"max-age\s*=\s*\"?(\d+)", val, re.I)
+        age = int(m.group(1)) if m else 0
+        if age < HSTS_MIN_SECONDS:
+            checks.append(Check(name=name, status="warning", value=_short(val), recommendation=f"Die HSTS-Laufzeit ist zu kurz. Empfohlen: max-age von mindestens {HSTS_MIN_SECONDS} Sekunden (besser 31536000)."))
+        else:
+            checks.append(Check(name=name, status="pass", value=_short(val)))
+
+    # X-Frame-Options (CSP frame-ancestors is the modern equivalent)
+    name = "X-Frame-Options"
+    val = headers.get("x-frame-options")
+    if val and val.strip().upper() in ("DENY", "SAMEORIGIN"):
+        checks.append(Check(name=name, status="pass", value=_short(val)))
+    elif "frame-ancestors" in csp_dirs:
+        checks.append(Check(name=name, status="pass", value="Über CSP frame-ancestors geregelt"))
+    elif val:
+        checks.append(Check(name=name, status="warning", value=_short(val), recommendation="Ungültiger oder veralteter Wert. Setze X-Frame-Options: DENY oder SAMEORIGIN."))
+    else:
+        checks.append(Check(name=name, status="warning", value="Fehlt", recommendation="Verhindert Clickjacking-Angriffe. Setze X-Frame-Options: DENY oder SAMEORIGIN."))
+
+    # X-Content-Type-Options
+    name = "X-Content-Type-Options"
+    val = headers.get("x-content-type-options")
+    if val and val.strip().lower() == "nosniff":
+        checks.append(Check(name=name, status="pass", value=_short(val)))
+    elif val:
+        checks.append(Check(name=name, status="warning", value=_short(val), recommendation="Ungültiger Wert. Setze X-Content-Type-Options: nosniff."))
+    else:
+        checks.append(Check(name=name, status="warning", value="Fehlt", recommendation="Verhindert MIME-Sniffing. Setze X-Content-Type-Options: nosniff."))
+
+    # Referrer-Policy
+    name = "Referrer-Policy"
+    val = headers.get("referrer-policy")
+    if not val:
+        checks.append(Check(name=name, status="warning", value="Fehlt", recommendation="Kontrolliert welche Referrer-Informationen gesendet werden."))
+    else:
+        policies = [p.strip().lower() for p in val.split(",") if p.strip()]
+        effective = next((p for p in reversed(policies) if p in REFERRER_POLICIES), None)
+        if effective is None:
+            checks.append(Check(name=name, status="warning", value=_short(val), recommendation="Unbekannter Wert. Empfohlen: strict-origin-when-cross-origin oder no-referrer."))
+        elif effective == "unsafe-url":
+            checks.append(Check(name=name, status="warning", value=_short(val), recommendation="unsafe-url gibt die vollständige URL an Dritte weiter. Empfohlen: strict-origin-when-cross-origin."))
+        else:
+            checks.append(Check(name=name, status="pass", value=_short(val)))
+
+    # Content-Security-Policy
+    name = "Content-Security-Policy (CSP)"
+    if not csp:
+        checks.append(Check(name=name, status="warning", value="Fehlt", recommendation="Schützt vor XSS-Angriffen. Definiere eine CSP-Richtlinie."))
+    else:
+        script_src = csp_dirs.get("script-src", csp_dirs.get("default-src", []))
+        protected = any(t.startswith(("'nonce-", "'sha")) or t == "'strict-dynamic'" for t in script_src)
+        weak = "'unsafe-eval'" in script_src or ("'unsafe-inline'" in script_src and not protected)
+        if weak:
+            checks.append(Check(name=name, status="warning", value=_short(csp), recommendation="Die CSP erlaubt 'unsafe-inline' oder 'unsafe-eval' für Skripte und bietet damit nur eingeschränkten XSS-Schutz."))
+        else:
+            checks.append(Check(name=name, status="pass", value=_short(csp)))
+
+    return checks
 
 
 def _get_ssl_info(hostname: str) -> dict:
@@ -92,20 +184,7 @@ async def analyze(url: str) -> SecurityResult:
             resp = await client.get(url)
         headers = {k.lower(): v for k, v in resp.headers.items()}
 
-        header_checks = [
-            ("strict-transport-security", "HSTS (Strict-Transport-Security)", "Schützt vor Downgrade-Angriffen. Füge den HSTS-Header hinzu."),
-            ("x-frame-options", "X-Frame-Options", "Verhindert Clickjacking-Angriffe. Setze X-Frame-Options: DENY oder SAMEORIGIN."),
-            ("x-content-type-options", "X-Content-Type-Options", "Verhindert MIME-Sniffing. Setze X-Content-Type-Options: nosniff."),
-            ("referrer-policy", "Referrer-Policy", "Kontrolliert welche Referrer-Informationen gesendet werden."),
-            ("content-security-policy", "Content-Security-Policy (CSP)", "Schützt vor XSS-Angriffen. Definiere eine CSP-Richtlinie."),
-        ]
-
-        for header_key, label, recommendation in header_checks:
-            val = headers.get(header_key)
-            if val:
-                checks.append(Check(name=label, status="pass", value=val[:80] if len(val) > 80 else val))
-            else:
-                checks.append(Check(name=label, status="warning", value="Fehlt", recommendation=recommendation))
+        checks.extend(_evaluate_headers(headers))
 
         return SecurityResult(
             score=_score(checks),

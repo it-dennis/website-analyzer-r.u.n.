@@ -1,9 +1,9 @@
 import httpx
-import re
-from bs4 import BeautifulSoup, Comment
+from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
 from ..safe_url import safe_client
 from ..schemas import ContentResult, Check
+from .html_utils import images_without_alt, js_rendered_hint, visible_text
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; WebCheckAnalyzer/1.0)",
@@ -20,15 +20,6 @@ def _score(checks: list[Check]) -> int:
     return round(points / (len(scorable) * 2) * 100)
 
 
-def _extract_text(soup: BeautifulSoup) -> str:
-    for tag in soup(["script", "style", "noscript", "nav", "footer", "header"]):
-        tag.decompose()
-    for comment in soup.find_all(string=lambda t: isinstance(t, Comment)):
-        comment.extract()
-    text = soup.get_text(separator=" ", strip=True)
-    return re.sub(r"\s+", " ", text).strip()
-
-
 async def analyze(url: str) -> ContentResult:
     try:
         async with safe_client(headers=HEADERS, timeout=TIMEOUT, follow_redirects=True) as client:
@@ -38,7 +29,7 @@ async def analyze(url: str) -> ContentResult:
         parsed = urlparse(url)
         domain = parsed.netloc
 
-        text = _extract_text(BeautifulSoup(resp.text, "lxml"))
+        text = visible_text(BeautifulSoup(resp.text, "lxml"))
         words = text.split()
         word_count = len(words)
         reading_time = round(word_count / 200, 1)
@@ -59,7 +50,7 @@ async def analyze(url: str) -> ContentResult:
 
         # Images
         all_imgs = soup.find_all("img")
-        missing_alt = [img for img in all_imgs if not img.get("alt")]
+        missing_alt = images_without_alt(soup)
 
         # Headings
         h1 = soup.find_all("h1")
@@ -85,16 +76,20 @@ async def analyze(url: str) -> ContentResult:
         # Images & Alt
         if all_imgs:
             if not missing_alt:
-                checks.append(Check(name="Bilder Alt-Texte", status="pass", value=f"{len(all_imgs)} Bilder, alle mit Alt-Text"))
+                checks.append(Check(name="Bilder Alt-Texte", status="info", value=f"{len(all_imgs)} Bilder, alle mit Alt-Text"))
             else:
                 pct = round(len(missing_alt) / len(all_imgs) * 100)
-                checks.append(Check(name="Bilder Alt-Texte", status="warning" if pct < 50 else "fail", value=f"{len(missing_alt)}/{len(all_imgs)} ohne Alt-Text ({pct}%)", recommendation="Alle Bilder sollten beschreibende Alt-Texte haben."))
+                checks.append(Check(name="Bilder Alt-Texte", status="info", value=f"{len(missing_alt)}/{len(all_imgs)} ohne Alt-Text ({pct}%)", recommendation="Alle inhaltlichen Bilder sollten beschreibende Alt-Texte haben. Dekorative Bilder erhalten ein leeres alt=\"\". (Fließt über den SEO-Bereich in die Bewertung ein.)"))
         else:
             checks.append(Check(name="Bilder Alt-Texte", status="info", value="Keine Bilder gefunden"))
 
         # Links
         checks.append(Check(name="Interne Verlinkung", status="pass" if internal >= 3 else "warning", value=f"{internal} interne Links", recommendation=None if internal >= 3 else "Mehr interne Verlinkungen verbessern die Navigation und SEO."))
         checks.append(Check(name="Externe Links", status="info", value=f"{external} externe Links"))
+
+        js_hint = js_rendered_hint(resp.text)
+        if js_hint:
+            checks.append(js_hint)
 
         return ContentResult(
             score=_score(checks),

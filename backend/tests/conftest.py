@@ -64,8 +64,10 @@ GOOD_HTML = """<!doctype html>
 
 def good_site_handler(request: httpx.Request) -> httpx.Response:
     path = request.url.path
-    if path in ("/robots.txt", "/sitemap.xml"):
-        return httpx.Response(200, text="ok")
+    if path == "/robots.txt":
+        return httpx.Response(200, text="User-agent: *\nAllow: /\nSitemap: https://example.com/sitemap.xml", headers={"content-type": "text/plain"})
+    if path == "/sitemap.xml":
+        return httpx.Response(200, text='<?xml version="1.0"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>', headers={"content-type": "application/xml"})
     if request.url.host == "www.googleapis.com":
         audits = {
             "first-contentful-paint": {"numericValue": 1000, "displayValue": "1,0 s"},
@@ -77,7 +79,7 @@ def good_site_handler(request: httpx.Request) -> httpx.Response:
         cats = {k: {"score": 0.9} for k in ("performance", "accessibility", "best-practices", "seo")}
         return httpx.Response(200, json={"lighthouseResult": {"categories": cats, "audits": audits}})
     headers = {
-        "strict-transport-security": "max-age=1",
+        "strict-transport-security": "max-age=31536000",
         "x-frame-options": "DENY",
         "x-content-type-options": "nosniff",
         "referrer-policy": "no-referrer",

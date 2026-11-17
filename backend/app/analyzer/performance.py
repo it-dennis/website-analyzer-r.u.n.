@@ -4,7 +4,7 @@ from typing import Optional
 from ..schemas import PerformanceResult, PerformanceScores, PerformanceMetric
 
 PAGESPEED_BASE = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
-TIMEOUT = 30.0
+TIMEOUT = 60.0
 
 
 def _metric_status(value_ms: Optional[int], good: int, poor: int) -> str:
@@ -19,7 +19,12 @@ def _metric_status(value_ms: Optional[int], good: int, poor: int) -> str:
 
 async def analyze(url: str) -> PerformanceResult:
     api_key = os.getenv("PAGESPEED_API_KEY", "")
-    params: dict = {"url": url, "strategy": "mobile"}
+    # Without `category`, PageSpeed only returns the performance category and the other scores would show as 0.
+    params: dict = {
+        "url": url,
+        "strategy": "mobile",
+        "category": ["performance", "accessibility", "best-practices", "seo"],
+    }
     if api_key:
         params["key"] = api_key
 

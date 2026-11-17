@@ -133,3 +133,114 @@ def test_performance_metric_thresholds():
     assert performance._metric_status(3000, 1800, 3000) == "needs-improvement"
     assert performance._metric_status(3001, 1800, 3000) == "poor"
     assert performance._metric_status(None, 1800, 3000) == "info"
+
+
+def test_alt_rule_empty_alt_is_decorative(mock_http):
+    html = '<html lang="de"><body><img src="a.png" alt=""><img src="b.png" alt="B"><img src="c.png"></body></html>'
+    mock_http(lambda req: httpx.Response(200, text=html))
+    r = asyncio.run(content.analyze("https://example.com"))
+    assert r.total_images == 3 and r.images_missing_alt == 1
+
+
+def test_alt_not_double_counted_in_content_score(mock_http):
+    html = "<html><body><h2>x</h2>" + '<img src="a.png">' * 4 + "<a href='/a'>a</a>" * 3 + "<p>" + "wort " * 320 + "</p></body></html>"
+    mock_http(lambda req: httpx.Response(200, text=html))
+    r = asyncio.run(content.analyze("https://example.com"))
+    assert by_name(r)["Bilder Alt-Texte"].status == "info"
+    assert r.score == 100
+
+
+def test_robots_follows_redirect_and_reads_sitemap_directive(mock_http):
+    def handler(req):
+        if req.url.path == "/robots.txt" and req.url.host == "example.com":
+            return httpx.Response(301, headers={"location": "https://cdn.example.org/robots.txt"})
+        if req.url.path == "/robots.txt":
+            return httpx.Response(200, text="User-agent: *\nDisallow:\nSitemap: https://example.com/map.xml")
+        if req.url.path == "/map.xml":
+            return httpx.Response(200, text="<urlset></urlset>")
+        return httpx.Response(200, text="<html><body></body></html>") if req.url.path == "/" else httpx.Response(404)
+
+    mock_http(handler)
+    checks = by_name(asyncio.run(seo.analyze("https://example.com")))
+    assert checks["robots.txt"].status == "pass"
+    assert checks["sitemap.xml"].status == "pass"
+
+
+def test_robots_disallow_all_fails(mock_http):
+    def handler(req):
+        if req.url.path == "/robots.txt":
+            return httpx.Response(200, text="User-agent: *\nDisallow: /")
+        return httpx.Response(200, text="<html></html>")
+
+    mock_http(handler)
+    assert by_name(asyncio.run(seo.analyze("https://example.com")))["robots.txt"].status == "fail"
+
+
+def test_robots_and_sitemap_html_are_not_accepted(mock_http):
+    mock_http(lambda req: httpx.Response(200, text="<!doctype html><html><body>Willkommen</body></html>"))
+    checks = by_name(asyncio.run(seo.analyze("https://example.com")))
+    assert checks["robots.txt"].status == "warning"
+    assert checks["sitemap.xml"].status == "warning"
+
+
+def test_seo_uses_final_host_for_robots(mock_http):
+    seen = []
+
+    def handler(req):
+        seen.append((req.url.host, req.url.path))
+        if req.url.host == "example.com" and req.url.path == "/":
+            return httpx.Response(301, headers={"location": "https://www.example.com/"})
+        return httpx.Response(200, text="<html></html>")
+
+    mock_http(handler)
+    asyncio.run(seo.analyze("https://example.com/"))
+    assert ("www.example.com", "/robots.txt") in seen
+
+
+def test_js_rendered_page_gets_hint(mock_http):
+    html = '<html><body><div id="root"></div><script src="/a.js"></script><noscript>Please enable JavaScript</noscript></body></html>'
+    mock_http(lambda req: httpx.Response(200, text=html))
+    assert "JavaScript-Inhalte" in by_name(asyncio.run(seo.analyze("https://example.com")))
+    assert "JavaScript-Inhalte" in by_name(asyncio.run(content.analyze("https://example.com")))
+
+
+def test_static_page_gets_no_js_hint(mock_http):
+    mock_http(good_site_handler)
+    assert "JavaScript-Inhalte" not in by_name(asyncio.run(seo.analyze("https://example.com")))
+
+
+def test_security_header_values_are_judged():
+    checks = by_name_list(security._evaluate_headers({
+        "strict-transport-security": "max-age=300",
+        "x-frame-options": "ALLOW-FROM x",
+        "x-content-type-options": "sniff",
+        "referrer-policy": "unsafe-url",
+        "content-security-policy": "script-src 'self' 'unsafe-inline'",
+    }))
+    assert all(c.status == "warning" for c in checks.values())
+
+
+def test_security_header_frame_ancestors_and_nonce_are_accepted():
+    checks = by_name_list(security._evaluate_headers({
+        "strict-transport-security": 'max-age=63072000; includeSubDomains',
+        "content-security-policy": "script-src 'nonce-abc' 'unsafe-inline'; frame-ancestors 'none'",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "strict-origin-when-cross-origin",
+    }))
+    assert all(c.status == "pass" for c in checks.values())
+
+
+def by_name_list(checks):
+    return {c.name: c for c in checks}
+
+
+def test_performance_requests_all_categories(mock_http):
+    seen = {}
+
+    def handler(req):
+        seen["q"] = req.url.params.get_list("category")
+        return good_site_handler(req)
+
+    mock_http(handler)
+    asyncio.run(performance.analyze("https://example.com"))
+    assert set(seen["q"]) == {"performance", "accessibility", "best-practices", "seo"}

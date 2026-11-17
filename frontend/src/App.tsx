@@ -70,7 +70,7 @@ export default function App() {
               </svg>
               <span className="text-lg font-medium">Analysiere Website…</span>
             </div>
-            <p className="text-sm text-gray-400">Das kann bis zu 30 Sekunden dauern (inkl. PageSpeed API)</p>
+            <p className="text-sm text-gray-400">Das kann bis zu einer Minute dauern (inkl. PageSpeed API)</p>
           </div>
         )}
 
@@ -137,6 +137,9 @@ export default function App() {
                 <AlertCircle size={18} className="text-amber-600 mt-0.5 shrink-0" />
                 <p className="text-sm text-amber-800">
                   Die Seite hat mit <strong>HTTP {result.http_status}</strong> geantwortet. Die Ergebnisse beziehen sich auf diese Fehlerseite und sind nur eingeschränkt aussagekräftig.
+                  {[401, 403, 406, 429].includes(result.http_status) && (
+                    <> Das deutet darauf hin, dass die Seite automatische Prüfungen blockiert (z. B. durch Bot-Schutz oder Firewall). Erlaube dem User-Agent <code>WebCheckAnalyzer</code> den Zugriff oder prüfe die Seite ohne Schutz.</>
+                  )}
                 </p>
               </div>
             )}
