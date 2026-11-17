@@ -14,17 +14,23 @@ services:
     env_file:
       - ./backend/.env
     mem_limit: 512m
+    logging: &logging
+      driver: json-file
+      options: {max-size: "5m", max-file: "3"}
     restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        VITE_BOOKING_URL: ${VITE_BOOKING_URL:-}
     ports:
       - "172.18.0.1:8080:80"
+    volumes:
+      # Werbekarte der Agentur: Datei bearbeiten (git pull), ohne Neubau live. Ein Verzeichnis, keine Einzeldatei,
+      # damit ein git pull (ersetzt die Datei) im Container sichtbar bleibt.
+      - ./frontend/public/promo:/usr/share/nginx/html/promo:ro
     mem_limit: 128m
+    logging: *logging
     depends_on:
       - backend
     restart: unless-stopped

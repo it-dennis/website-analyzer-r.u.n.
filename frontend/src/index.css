@@ -3,7 +3,42 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    background-color: theme('colors.bg');
+  }
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply bg-bg text-ink font-sans antialiased;
+    background-image:
+      radial-gradient(900px 480px at 80% -8%, rgba(145, 132, 217, 0.14), transparent 70%),
+      radial-gradient(700px 420px at -10% 8%, rgba(93, 82, 148, 0.16), transparent 70%);
+    background-repeat: no-repeat;
+  }
+  /* Hierarchie über Größe und Weißraum, nie über fettere Schnitte (Markenbuch: Überschriften Medium 500). */
+  h1, h2, h3, h4 {
+    @apply font-medium;
+  }
+  ::selection {
+    background: rgba(145, 132, 217, 0.35);
+  }
+  :focus-visible {
+    outline: 2px solid theme('colors.accent.DEFAULT');
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Primäre Aktion: Umriss in der Akzentfarbe, keine Füllung. */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border px-5 py-2.5 text-sm font-medium transition-colors;
+    @apply disabled:cursor-not-allowed disabled:opacity-45;
+  }
+  .btn-primary {
+    @apply border-accent text-accent-300 bg-accent/5 hover:bg-accent/15 active:bg-accent/25;
+  }
+  .btn-secondary {
+    @apply border-line text-neutral-300 hover:bg-white/5 active:bg-white/10;
+  }
+  .card {
+    @apply rounded-lg border border-line bg-surface shadow-card;
   }
 }

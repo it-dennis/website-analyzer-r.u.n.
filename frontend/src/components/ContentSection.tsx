@@ -19,9 +19,9 @@ export default function ContentSection({ data }: { data: ContentResult }) {
 
 function Stat({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
-    <div className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-3 flex flex-col gap-1">
-      <div className="flex items-center gap-1 text-gray-400">{icon}<span className="text-xs text-gray-500">{label}</span></div>
-      <span className="text-lg font-bold text-gray-800">{value}</span>
+    <div className="bg-bg/60 border border-line rounded-lg px-3 py-3 flex flex-col gap-1">
+      <div className="flex items-center gap-1 text-accent">{icon}<span className="text-xs text-neutral-500">{label}</span></div>
+      <span className="text-lg font-medium text-ink">{value}</span>
     </div>
   );
 }

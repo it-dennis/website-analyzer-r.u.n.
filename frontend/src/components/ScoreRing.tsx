@@ -5,9 +5,9 @@ interface Props {
 }
 
 function scoreColor(s: number) {
-  if (s >= 80) return { stroke: '#22c55e', text: 'text-green-600' };
-  if (s >= 50) return { stroke: '#eab308', text: 'text-yellow-600' };
-  return { stroke: '#ef4444', text: 'text-red-600' };
+  if (s >= 80) return { stroke: '#7ccf9a', text: 'text-good' };
+  if (s >= 50) return { stroke: '#e6bd6f', text: 'text-warn' };
+  return { stroke: '#ee8a8a', text: 'text-bad' };
 }
 
 export default function ScoreRing({ score, size = 80, label }: Props) {
@@ -18,8 +18,8 @@ export default function ScoreRing({ score, size = 80, label }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <svg width={size} height={size}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e5e7eb" strokeWidth={8} />
+      <svg width={size} height={size} role="img" aria-label={`${label ?? 'Score'} ${score} von 100`}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(233,233,237,0.1)" strokeWidth={8} />
         <circle
           cx={size / 2} cy={size / 2} r={r}
           fill="none"
@@ -30,11 +30,11 @@ export default function ScoreRing({ score, size = 80, label }: Props) {
           strokeLinecap="round"
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
-        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize={size < 80 ? 14 : 20} fontWeight="700" fill={stroke}>
+        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize={size < 80 ? 14 : 22} fontWeight="500" fill={stroke}>
           {score}
         </text>
       </svg>
-      {label && <span className={`text-xs font-medium ${text}`}>{label}</span>}
+      {label && <span className={`text-xs ${text}`}>{label}</span>}
     </div>
   );
 }

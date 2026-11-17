@@ -61,13 +61,7 @@ Abgedeckt sind der SSRF-Schutz (inkl. Weiterleitungen), das Rate-Limiting, die v
 | `RATE_LIMIT_PER_MINUTE` | Scans pro IP und Minute (`0` = aus) | `5` |
 | `RATE_LIMIT_PER_HOUR` | Scans pro IP und Stunde (`0` = aus) | `30` |
 
-**Frontend** (Build-Zeit)
-
-| Variable | Bedeutung |
-|---|---|
-| `VITE_BOOKING_URL` | URL der Buchungsseite. Ist sie gesetzt, erscheint nach jedem Scan ein „Audit buchen“-Banner. Die gescannte URL wird als `?url=` übergeben. Ohne Wert bleibt der Banner ausgeblendet. |
-
-Mit Docker Compose liest Compose `VITE_BOOKING_URL` aus der Shell oder aus der `.env` im Projektroot (Vorlage: `.env.example`; nicht `frontend/.env.example`) und reicht sie als Build-Argument weiter.
+**Werbekarte der Dennis Rapp IT-Agency** (Start- und Ergebnisseite): Inhalt in `frontend/public/promo/promo.json` (Überschrift, Text, Pluspunkte, Button). Im Button-Link steht `{url}` für die geprüfte Adresse. Fehlt die Datei, greift ein eingebauter Standardtext. Auf dem VPS ist das Verzeichnis in den Container eingebunden: Datei ändern, committen, auf dem Server `git pull`, fertig, ohne Neubau.
 
 Die Startseite akzeptiert `?url=example.com` und füllt damit das Eingabefeld vor.
 
@@ -77,7 +71,7 @@ Voraussetzungen: ein Server mit Docker, eine Domain, deren DNS-Eintrag auf den S
 
 ```bash
 cp backend/.env.example backend/.env    # und ausfüllen
-cp .env.example .env                     # DOMAIN (Pflicht) und VITE_BOOKING_URL (optional) setzen
+cp .env.example .env                     # DOMAIN (Pflicht) setzen
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 

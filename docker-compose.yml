@@ -11,8 +11,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        VITE_BOOKING_URL: ${VITE_BOOKING_URL:-}
     ports:
       - "80:80"
     depends_on:

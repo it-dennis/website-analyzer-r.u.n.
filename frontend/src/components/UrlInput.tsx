@@ -17,24 +17,24 @@ export default function UrlInput({ onSubmit, loading, initialValue = '' }: Props
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 w-full max-w-2xl mx-auto">
+    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 w-full">
+      <label htmlFor="url" className="sr-only">Adresse der Website</label>
       <input
+        id="url"
         type="text"
+        inputMode="url"
+        autoComplete="url"
         value={url}
         onChange={e => setUrl(e.target.value)}
-        placeholder="z.B. www.denira-entertainment.com"
-        className="flex-1 px-4 py-3 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+        placeholder="www.ihre-website.de"
+        className="flex-1 min-w-0 px-4 py-3 rounded-lg border border-line bg-surface text-ink placeholder:text-neutral-600 text-sm hover:border-accent-700 transition-colors"
         disabled={loading}
       />
-      <button
-        type="submit"
-        disabled={loading || !url.trim()}
-        className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
-      >
+      <button type="submit" disabled={loading || !url.trim()} className="btn btn-primary px-6 py-3">
         {loading ? (
-          <><Loader2 size={16} className="animate-spin" /> Analysiere…</>
+          <><Loader2 size={16} className="animate-spin" /> Analysiere …</>
         ) : (
-          <><Search size={16} /> Analysieren</>
+          <><Search size={16} /> Website prüfen</>
         )}
       </button>
     </form>
