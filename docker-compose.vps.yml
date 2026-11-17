@@ -1,0 +1,30 @@
+# R.U.N. auf einem VPS, auf dem schon ein nginx die Ports 80/443 belegt (z. B. der Container
+# 1512dd-frontend-1). Kein Caddy: Das Frontend lauscht nur auf der Docker-Bridge 172.18.0.1:8080,
+# der vorhandene nginx leitet run.dennisrapp.com per proxy_pass dorthin und holt das Zertifikat per certbot.
+#
+#   docker compose -f docker-compose.vps.yml up -d --build
+#
+# Eigenes Compose-Projekt "run" mit eigenem Netz: Die Dienste backend/frontend sind nur dort sichtbar
+# und kollidieren nicht mit gleichnamigen Diensten anderer Projekte.
+name: run
+
+services:
+  backend:
+    build: ./backend
+    env_file:
+      - ./backend/.env
+    mem_limit: 512m
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_BOOKING_URL: ${VITE_BOOKING_URL:-}
+    ports:
+      - "172.18.0.1:8080:80"
+    mem_limit: 128m
+    depends_on:
+      - backend
+    restart: unless-stopped

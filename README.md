@@ -90,6 +90,16 @@ Aufbau: **Caddy** (Ports 80/443) → **nginx** (Frontend, intern) → **Backend*
 - Das Rate-Limit nutzt die Client-IP. Caddy übergibt sie als `X-Forwarded-For`, nginx übernimmt sie aus dem Docker-Netz (`frontend/nginx.conf`). Steht vor Caddy noch ein weiterer Proxy (z. B. Cloudflare), muss dieser Caddy als vertrauenswürdig eingerichtet werden (`trusted_proxies`), sonst teilen sich alle Nutzer ein Limit.
 - Die Rate-Limit-Zähler liegen im Arbeitsspeicher. Das ist für einen einzelnen uvicorn-Prozess (wie im Dockerfile) gedacht; bei mehreren Workern oder Replikas wäre ein gemeinsamer Speicher wie Redis nötig.
 
+### Variante: VPS mit vorhandenem nginx
+
+Belegt ein anderer Webserver schon Port 80/443, nutzt du statt Caddy `docker-compose.vps.yml`:
+
+```bash
+docker compose -f docker-compose.vps.yml up -d --build
+```
+
+Das Frontend lauscht dann nur auf `172.18.0.1:8080` (Docker-Bridge). Der vorhandene nginx leitet die Domain per `proxy_pass http://172.18.0.1:8080` dorthin, setzt `X-Forwarded-For` auf `$remote_addr` und kümmert sich um das Zertifikat. Backend und Frontend laufen im eigenen Compose-Projekt `run` mit Speichergrenzen.
+
 ## Sicherheit
 
 Das Backend ruft die eingegebenen URLs selbst ab. Deshalb gilt:
