@@ -3,6 +3,10 @@ services:
     build: ./backend
     env_file:
       - ./backend/.env
+    environment:
+      - DATA_DIR=/data
+    volumes:
+      - ./data:/data   # newsletter.csv (Eintragungen) bleibt beim Neubau erhalten
     restart: unless-stopped
 
   frontend:

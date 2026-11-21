@@ -16,8 +16,9 @@ _allowed_origins = ["http://localhost:5173", "http://localhost:3000", "http://lo
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
+    expose_headers=["Content-Disposition"],
 )
 
 app.include_router(router)

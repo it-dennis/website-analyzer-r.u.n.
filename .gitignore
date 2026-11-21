@@ -25,3 +25,6 @@ Thumbs.db
 # Verification artifacts
 frontend/verify*.png
 frontend/verify*.mjs
+
+# Newsletter-Eintragungen (personenbezogen, niemals ins Repo)
+data/

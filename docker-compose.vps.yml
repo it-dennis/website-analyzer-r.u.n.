@@ -13,6 +13,10 @@ services:
     build: ./backend
     env_file:
       - ./backend/.env
+    environment:
+      - DATA_DIR=/data
+    volumes:
+      - ./data:/data   # newsletter.csv (Eintragungen) bleibt beim Neubau erhalten
     mem_limit: 512m
     logging: &logging
       driver: json-file

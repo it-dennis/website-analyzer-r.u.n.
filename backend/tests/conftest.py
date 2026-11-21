@@ -3,7 +3,7 @@ import socket
 import httpx
 import pytest
 
-from app import rate_limit
+from app import rate_limit, routes
 
 _REAL_CLIENT = httpx.AsyncClient
 PUBLIC_IP = "93.184.216.34"
@@ -12,6 +12,7 @@ PUBLIC_IP = "93.184.216.34"
 @pytest.fixture(autouse=True)
 def _reset_rate_limit(monkeypatch):
     rate_limit._hits.clear()
+    routes._cache.clear()  # Ergebnis-Cache soll Tests nicht beeinflussen
     monkeypatch.setattr(rate_limit, "PER_MINUTE", 1000)
     monkeypatch.setattr(rate_limit, "PER_HOUR", 1000)
 

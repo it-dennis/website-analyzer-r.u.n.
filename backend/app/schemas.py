@@ -64,6 +64,33 @@ class ContentResult(BaseModel):
     error: Optional[str] = None
 
 
+class Solution(BaseModel):
+    fix: str      # was Dennis Rapp IT konkret macht
+    effort: str   # grobe Aufwandsstufe, kein Preis
+
+
+class Finding(BaseModel):
+    area: str     # Sicherheit | Sichtbarkeit | Inhalt & Aufbau | Tempo
+    name: str
+    status: str   # "fail" | "warning"
+    value: Optional[str] = None
+    recommendation: Optional[str] = None
+    weight: int = 1
+    solution: Solution
+
+
+class SubscribeRequest(BaseModel):
+    email: str
+    consent: bool
+    domain: str = ""
+    website: str = ""  # Honeypot: echte Nutzer lassen das Feld leer
+
+
+class ReportRequest(BaseModel):
+    url: str
+    email: str
+
+
 class AnalysisResult(BaseModel):
     url: str
     overall_score: int
@@ -74,3 +101,4 @@ class AnalysisResult(BaseModel):
     analyzed_at: str
     response_time_ms: Optional[int] = None
     http_status: Optional[int] = None
+    findings: List[Finding] = []
