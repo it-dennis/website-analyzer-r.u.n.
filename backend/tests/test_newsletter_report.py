@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from app import newsletter
+from app import brevo, newsletter
 from app.main import app
 
 
@@ -36,3 +36,23 @@ def test_report_needs_subscription():
     c = TestClient(app)
     r = c.post("/api/report", json={"url": "beispiel.de", "email": "nie-eingetragen@example.org"})
     assert r.status_code == 403
+
+
+def test_subscribe_calls_brevo_and_survives_its_failure(tmp_path, monkeypatch):
+    c = _client(tmp_path, monkeypatch)
+    calls = []
+
+    async def fake(email):
+        calls.append(email)
+        return False  # Brevo down
+
+    monkeypatch.setattr(brevo, "double_optin", fake)
+    r = c.post("/api/subscribe", json={"email": "x@y.de", "consent": True})
+    assert r.status_code == 200 and calls == ["x@y.de"]
+    assert newsletter.contains("x@y.de")
+
+
+def test_brevo_disabled_without_key(monkeypatch):
+    monkeypatch.delenv("BREVO_API_KEY", raising=False)
+    import asyncio
+    assert asyncio.run(brevo.double_optin("a@b.de")) is False

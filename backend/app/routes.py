@@ -9,7 +9,7 @@ from .schemas import (AnalysisRequest, AnalysisResult, SEOResult, PerformanceRes
 from .rate_limit import rate_limit, _client_ip
 from .limits import RateLimiter
 from .solutions import build_findings
-from . import newsletter, report_pdf
+from . import brevo, newsletter, report_pdf
 from .safe_url import assert_safe_url, safe_client, UnsafeURLError
 from .analyzer import seo, performance, security, content
 
@@ -126,6 +126,7 @@ async def subscribe(req: SubscribeRequest, http: Request):
     if not req.consent:
         raise HTTPException(status_code=422, detail="Bitte stimme dem Newsletter zu, um die Auswertung zu erhalten.")
     newsletter.add(email, req.domain.strip())
+    await brevo.double_optin(email)  # Bestätigungs-Mail über Brevo; Fehler blockieren nichts
     return {"ok": True}
 
 
