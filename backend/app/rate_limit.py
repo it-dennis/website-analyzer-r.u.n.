@@ -45,7 +45,7 @@ async def rate_limit(request: Request) -> None:
     if retry_after:
         raise HTTPException(
             status_code=429,
-            detail=f"Zu viele Anfragen. Bitte versuchen Sie es in {retry_after} Sekunden erneut.",
+            detail=f"Zu viele Anfragen. Bitte versuche es in {retry_after} Sekunden erneut.",
             headers={"Retry-After": str(retry_after)},
         )
     hits.append(now)

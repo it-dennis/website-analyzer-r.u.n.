@@ -16,7 +16,7 @@ class RateLimiter:
         while q and now - q[0] > self.window:
             q.popleft()
         if len(q) >= self.limit:
-            raise HTTPException(status_code=429, detail="Zu viele Anfragen. Bitte versuchen Sie es in einigen Minuten erneut.",
+            raise HTTPException(status_code=429, detail="Zu viele Anfragen. Bitte versuche es in einigen Minuten erneut.",
                                 headers={"Retry-After": str(int(self.window - (now - q[0])) + 1)})
         q.append(now)
         if len(self.hits) > 5000:

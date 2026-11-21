@@ -96,7 +96,7 @@ async def analyze(url: str) -> PerformanceResult:
             score=None,
             metrics=[],
             strategy="mobile",
-            error=f"Die Performance-Messung von Google ist gerade nicht verfügbar (Fehler {e.response.status_code}). Bitte versuchen Sie es in ein paar Minuten erneut.",
+            error=f"Die Performance-Messung von Google ist gerade nicht verfügbar (Fehler {e.response.status_code}). Bitte versuche es in ein paar Minuten erneut.",
         )
     except Exception as e:
         return PerformanceResult(

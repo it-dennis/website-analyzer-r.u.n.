@@ -22,9 +22,9 @@ def _t(s) -> str:
 
 def request_mailto(domain: str, r: AnalysisResult, only=None) -> str:
     lines = [f"- {f.name} ({f.area})" for f in ([only] if only else r.findings[:12])]
-    body = (f"Hallo Herr Rapp,\n\nich habe die Auswertung für {domain} erhalten und möchte, "
-            f"dass Sie sich die folgenden Punkte ansehen:\n\n" + "\n".join(lines) +
-            "\n\nBitte melden Sie sich, damit wir Umfang und Preis besprechen können.\n")
+    body = (f"Hallo Dennis,\n\nich habe die Auswertung für {domain} erhalten und möchte, "
+            f"dass Du Dir die folgenden Punkte ansiehst:\n\n" + "\n".join(lines) +
+            "\n\nBitte melde Dich, damit wir Umfang und Preis besprechen können.\n")
     return f"mailto:{MAIL}?subject={quote('Anfrage zur Website-Auswertung: ' + domain)}&body={quote(body)}"
 
 
@@ -75,7 +75,7 @@ def build(r: AnalysisResult, domain: str) -> bytes:
     n_fail = sum(1 for f in r.findings if f.status == "fail")
     pdf.set_font("Helvetica", "", 10.5)
     pdf.multi_cell(0, 5.5, align="L", text=_t(
-        f"Gefunden wurden {len(r.findings)} Punkte, davon {n_fail} mit hoher Dringlichkeit. "
+        (f"Gefunden wurde 1 Punkt, davon {n_fail} mit hoher Dringlichkeit. " if len(r.findings) == 1 else f"Gefunden wurden {len(r.findings)} Punkte, davon {n_fail} mit hoher Dringlichkeit. ") +
         "Zu jedem Punkt steht, was ich dafür tun würde. Den Preis besprechen wir gemeinsam, "
         "nachdem ich mir die Seite angesehen habe."), new_x="LMARGIN", new_y="NEXT")
     pdf.ln(4)
